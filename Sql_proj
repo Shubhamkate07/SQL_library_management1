@@ -1,0 +1,103 @@
+-- Create the database
+CREATE DATABASE LB;
+
+-- Switch to the database
+USE LB;
+
+-- Create the books table
+CREATE TABLE books (
+    book_id INT PRIMARY KEY,
+    title VARCHAR(255),
+    author VARCHAR(255),
+    genre VARCHAR(50),
+    available BOOLEAN
+);
+
+-- Insert sample book data
+INSERT INTO books (book_id, title, author, genre, available)
+VALUES
+    (1, 'Book 1', 'Author A', 'Fantasy', 1),
+    (2, 'Book 2', 'Author B', 'Mystery', 1),
+    (3, 'Book 3', 'Author A', 'Science Fiction', 0),
+    (4, 'Book 4', 'Author C', 'Romance', 1),
+    (5, 'Book 5', 'Author B', 'Mystery', 1);
+
+-- Create the members table
+CREATE TABLE members (
+    member_id INT PRIMARY KEY,
+    name VARCHAR(255),
+    email VARCHAR(255)
+);
+
+-- Insert sample member data
+INSERT INTO members (member_id, name, email)
+VALUES
+    (1, 'John Doe', 'john@example.com'),
+    (2, 'Jane Smith', 'jane@example.com'),
+    (3, 'Michael Johnson', 'michael@example.com');
+
+-- Create the borrow_history table
+CREATE TABLE borrow_history (
+    history_id INT PRIMARY KEY,
+    book_id INT,
+    member_id INT,
+    borrow_date DATE,
+    return_date DATE,
+    FOREIGN KEY (book_id) REFERENCES books(book_id),
+    FOREIGN KEY (member_id) REFERENCES members(member_id)
+);
+
+-- Insert sample borrow history data
+INSERT INTO borrow_history (history_id, book_id, member_id, borrow_date, return_date)
+VALUES
+    (1, 1, 1, '2023-08-01', '2023-08-15'),
+    (2, 3, 2, '2023-08-03', '2023-08-10'),
+    (3, 5, 1, '2023-08-05', NULL);
+
+-- Display all books
+SELECT * FROM books;
+
+-- Display available books
+SELECT * FROM books WHERE available = 1;
+
+-- Display books by a specific author
+SELECT * FROM books WHERE author = 'Author A';
+
+-- Display the number of books in each genre
+SELECT genre, COUNT(*) as count FROM books GROUP BY genre;
+
+-- Display books borrowed by each member
+SELECT m.name, COUNT(*) as books_borrowed
+FROM members m
+JOIN borrow_history bh ON m.member_id = bh.member_id
+GROUP BY m.name;
+
+-- Display books currently borrowed with member information
+SELECT b.title, m.name AS member_name
+FROM books b
+JOIN borrow_history bh ON b.book_id = bh.book_id
+JOIN members m ON bh.member_id = m.member_id
+WHERE b.available = 0 AND bh.return_date IS NULL;
+
+-- Simulate buying a book and updating availability
+UPDATE books
+SET available = 0
+WHERE book_id = 4;
+
+-- Add a new member
+INSERT INTO members (member_id, name, email)
+VALUES (4, 'New Member', 'new@example.com');
+
+-- Simulate borrowing a book and updating history
+INSERT INTO borrow_history (history_id, book_id, member_id, borrow_date)
+VALUES (4, 3, 4, CURDATE());
+
+-- Display updated book availability
+SELECT book_id, title, available
+FROM books;
+
+-- Display updated borrow history
+SELECT bh.history_id, b.title AS book_title, m.name AS member_name, bh.borrow_date, bh.return_date
+FROM borrow_history bh
+JOIN books b ON bh.book_id = b.book_id
+JOIN members m ON bh.member_id = m.member_id;
